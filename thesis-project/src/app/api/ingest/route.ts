@@ -1,3 +1,4 @@
+import { consolidationService } from "@/services/consolidationService";
 import { NextRequest, NextResponse } from "next/server";
 import { parseStringPromise } from "xml2js";
 
@@ -23,11 +24,17 @@ export async function POST(req: NextRequest) {
         { status: 415 },
       );
     }
-
-    return NextResponse.json({ message: reqBody }, { status: 200 });
+    const result = await consolidationService(reqBody);
+    return NextResponse.json(result, { status: 200 });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Something went wrong";
-    return NextResponse.json({ message }, { status: 500 });
+    const isClientError =
+      message.includes("reqBody is required") ||
+      message.includes("Unsupported content type");
+    return NextResponse.json(
+      { success: false, message },
+      { status: isClientError ? 400 : 500 },
+    );
   }
 }
