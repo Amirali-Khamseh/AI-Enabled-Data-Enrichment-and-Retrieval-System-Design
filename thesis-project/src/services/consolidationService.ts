@@ -1,5 +1,10 @@
+import {
+  GEMINI_MODEL,
+  GEMINI_UNIFICATION_ENRICHMENT_PROMPT,
+} from "@/app/const";
+import { reqBodySchema } from "@/app/schema";
 import { getGeminiClient } from "@/utils/GeminiClient";
-
+import * as z from "zod";
 export async function consolidationService(reqBody: unknown) {
   try {
     if (!reqBody) {
@@ -8,17 +13,25 @@ export async function consolidationService(reqBody: unknown) {
 
     const client = getGeminiClient();
     const response = await client.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Please consolidate and analyze this data: ${JSON.stringify(reqBody)}`,
+      model: GEMINI_MODEL,
+      contents: `${GEMINI_UNIFICATION_ENRICHMENT_PROMPT} ${JSON.stringify(reqBody)}`,
+      config: {
+        responseMimeType: "application/json",
+        responseJsonSchema: z.toJSONSchema(reqBodySchema),
+      },
     });
+    const responseData = response?.text;
+    const parsedData = responseData ? JSON.parse(responseData) : null;
+    const validatedData = reqBodySchema.safeParse(parsedData);
 
-    const responseText = response.text;
-
-    return {
-      success: true,
-      data: responseText,
-      timestamp: new Date().toISOString(),
-    };
+    if (validatedData.success) {
+      return {
+        success: true,
+        data: validatedData.data,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    throw new Error("Incompatible type: response data does not match schema");
   } catch (error) {
     console.error("Consolidation error:", error);
     throw new Error(
