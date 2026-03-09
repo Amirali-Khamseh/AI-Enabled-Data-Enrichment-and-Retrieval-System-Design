@@ -157,12 +157,35 @@
   }
 }
 
+@keyframes logo-letter-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 1s ease-out forwards;
 }
 
 .animate-fade-in-up {
   animation: fade-in-up 1s ease-out forwards;
+}
+
+.animate-logo-letter {
+  opacity: 0;
+  animation: logo-letter-slide-in 450ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-logo-letter {
+    opacity: 1;
+    animation: none;
+  }
 }
 
 /* Typography enhancements */
